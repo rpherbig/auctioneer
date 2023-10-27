@@ -12,6 +12,10 @@ bot = Discordrb::Commands::CommandBot.new token: IO.readlines("token.txt", chomp
 puts "This bot's invite URL is #{bot.invite_url}."
 puts 'Click on it to invite it to your server.'
 
+@auction_items = {
+  'Item A' => 12,
+  'Item B' => 8,
+}
 @message_ids = []
 
 def recalculate_reactions(reaction_event)
@@ -41,13 +45,11 @@ bot.command(:start, help_available: false) do |event|
 
   bot.send_message(event.channel.id, 'Starting a new auction, please wait to bid!')
 
-  a = bot.send_message(event.channel.id, 'Item A: 12/12 remaining: No bidders')
-  add_reactions(a.message)
-  @message_ids.push(a)
-
-  b = bot.send_message(event.channel.id, 'Item B: 6/6 remaining: No bidders')
-  add_reactions(b.message)
-  @message_ids.push(b)
+  @auction_items.each do |name, quantity|
+    e = bot.send_message(event.channel.id, "#{name} (0/#{quantity}): No bidders")
+    add_reactions(e.message)
+    @message_ids.push(e.message.id)
+  end
 
   bot.send_message(event.channel.id, 'The auction is ready, please feel free to bid!')
 
