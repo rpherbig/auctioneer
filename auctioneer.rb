@@ -4,7 +4,8 @@ ONE = "\u0031\uFE0F\u20E3"
 TWO = "\u0032\uFE0F\u20E3"
 THREE = "\u0033\uFE0F\u20E3"
 BOT_ID = 1167205208909160488
-admins = [85187136659128320]
+# S, L, K
+admins = [85187136659128320, 256665150180818946, 673546923051057183]
 
 bot = Discordrb::Commands::CommandBot.new token: IO.readlines("token.txt", chomp: true).first, prefix: '!'
 
