@@ -79,7 +79,7 @@ bot.command(:start, help_available: false) do |event|
 
   time = Time.new
   date_string = time.strftime("%m/%d/%Y")
-  bot.send_message(event.channel.id, ":tada: Starting a new auction for #{date_string}, please wait to bid! :tada:")
+  bot.send_message(event.channel.id, ":tada: Starting a new auction for #{date_string}, please wait a moment! :tada:")
 
   @AUCTION_ITEMS.each do |name, quantity|
     message = format_auction_item(name, quantity, quantity, [])
@@ -88,8 +88,9 @@ bot.command(:start, help_available: false) do |event|
     @message_ids[e.message.id] = name
   end
 
+  bot.send_message(event.channel.id, 'To claim something, react to its message with the quantity you want. For example, :two: means two of that item.')
   bot.send_message(event.channel.id, 'Note: I am rate limited, so changes may take a minute to show up.')
-  bot.send_message(event.channel.id, 'The auction is ready, please feel free to bid!')
+  bot.send_message(event.channel.id, ':tada: The auction is ready! :tada:')
 
   nil
 end
