@@ -2,12 +2,12 @@ Auctioneer bot for the game Super Snail, which has an auction feature after each
 
 # What it does
 
-Watches for all reactions to all messages (TODO: in a specific channel?).
+Accepts specific commands (see below).
 
-If they are specific reactions (:one:, :two:, :three:) to messages related to a running auction, then updates the message with the new information.
+While an auction is running, watches for added/removed reactions to its own messages. For specific reactions (:one:, :two:, :three:), it updates the message with the new information.
 
 # Discord commands
 
-* **start**: starts a new auction
-* **stop**: stops the current auction, if any
-* **exit**: shut down the bot
+* **!start**: starts a new auction
+* **!stop**: stops the current auction, if any
+* **!exit**: shut down the bot
