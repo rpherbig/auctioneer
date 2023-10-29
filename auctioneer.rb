@@ -25,9 +25,9 @@ ADMINS = [85187136659128320, 256665150180818946, 673546923051057183]
 
 @message_ids = {}
 
-bot = Discordrb::Commands::CommandBot.new token: IO.readlines("token.txt", chomp: true).first, prefix: '!'
+@bot = Discordrb::Commands::CommandBot.new token: IO.readlines("token.txt", chomp: true).first, prefix: '!'
 
-puts "This bot's invite URL is #{bot.invite_url}."
+puts "This bot's invite URL is #{@bot.invite_url}."
 puts 'Click on it to invite it to your server.'
 
 def format_auction_item(item_name, remaining_quantity, max_quantity, user_bids)
@@ -57,16 +57,20 @@ def recalculate_reactions(reaction_event)
   remaining = max_quantity - new_quantity
   new_message = format_auction_item(item_name, remaining, max_quantity, user_strings)
 
+  if remaining < 0
+    @bot.send_message(reaction_event.message.channel.id, ":x: Item \"#{item_name}\" has too many bids. I need a human to fix it! :x:")
+  end
+
   reaction_event.message.edit(new_message)
 end
 
 #in: "#war-auction"
-bot.reaction_add do |reaction_event|
+@bot.reaction_add do |reaction_event|
   recalculate_reactions(reaction_event)
 end
 
 #in: "#war-auction"
-bot.reaction_remove do |reaction_event|
+@bot.reaction_remove do |reaction_event|
   recalculate_reactions(reaction_event)
 end
 
@@ -74,47 +78,47 @@ def add_reactions(message)
   REACTIONS.each { |r| message.create_reaction(r) }
 end
 
-bot.command(:start, help_available: false) do |event|
+@bot.command(:start, help_available: false) do |event|
   break unless ADMINS.include?(event.user.id)
   puts 'Received start command'
 
   time = Time.new
   date_string = time.strftime("%m/%d/%Y")
-  bot.send_message(event.channel.id, ":tada: Starting a new auction for #{date_string}, please wait a moment! :tada:")
+  @bot.send_message(event.channel.id, ":tada: Starting a new auction for #{date_string}, please wait a moment! :tada:")
 
   @AUCTION_ITEMS.each do |name, quantity|
     message = format_auction_item(name, quantity, quantity, [])
-    e = bot.send_message(event.channel.id, message)
+    e = @bot.send_message(event.channel.id, message)
     add_reactions(e.message)
     @message_ids[e.message.id] = name
   end
 
-  bot.send_message(event.channel.id, 'To claim something, react to its message with the quantity you want. For example, :two: means two of that item.')
-  bot.send_message(event.channel.id, 'Note: I am rate limited, so changes may take a minute to show up.')
-  bot.send_message(event.channel.id, ':tada: The auction is ready! :tada:')
+  @bot.send_message(event.channel.id, 'To claim something, react to its message with the quantity you want. For example, :two: means two of that item.')
+  @bot.send_message(event.channel.id, 'Note: I am rate limited, so changes may take a minute to show up.')
+  @bot.send_message(event.channel.id, ':tada: The auction is ready! :tada:')
 
   nil
 end
 
-bot.command(:stop, help_available: false) do |event|
+@bot.command(:stop, help_available: false) do |event|
   break unless ADMINS.include?(event.user.id)
   puts 'Received stop command'
 
-  bot.send_message(event.channel.id, 'Stopping the auction!')
+  @bot.send_message(event.channel.id, 'Stopping the auction!')
 
   message_ids.clear
 
   nil
 end
 
-bot.command(:exit, help_available: false) do |event|
+@bot.command(:exit, help_available: false) do |event|
   break unless ADMINS.include?(event.user.id)
   puts 'Received exit command'
 
-  bot.send_message(event.channel.id, 'Auctioneer is shutting down')
+  @bot.send_message(event.channel.id, 'Auctioneer is shutting down')
   
   exit
 end
 
-at_exit { bot.stop }
-bot.run
+at_exit { @bot.stop }
+@bot.run
