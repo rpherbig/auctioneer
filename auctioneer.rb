@@ -3,6 +3,7 @@ require 'discordrb'
 ONE = "\u0031\uFE0F\u20E3"
 TWO = "\u0032\uFE0F\u20E3"
 THREE = "\u0033\uFE0F\u20E3"
+REACTIONS = [ONE, TWO, THREE]
 REACTION_TO_COUNT = {
   ONE => 1,
   TWO => 2,
@@ -41,7 +42,7 @@ def recalculate_reactions(reaction_event)
   new_quantity = 0
   user_strings = []
 
-  [ONE, TWO, THREE].each do |r|
+  REACTIONS.each do |r|
     users = reactions[r].reject { |u| u.id == BOT_ID }
     users.each do |u|
       count = REACTION_TO_COUNT[r]
@@ -70,7 +71,7 @@ bot.reaction_remove do |reaction_event|
 end
 
 def add_reactions(message)
-  [ONE, TWO, THREE].each { |r| message.create_reaction(r) }
+  REACTIONS.each { |r| message.create_reaction(r) }
 end
 
 bot.command(:start, help_available: false) do |event|
