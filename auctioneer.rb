@@ -46,7 +46,7 @@ def recalculate_reactions(reaction_event)
     users.each do |u|
       count = REACTION_TO_COUNT[r]
       new_quantity += count
-      user_string = count == 1 ? u.username : "#{u.username} x#{count}"
+      user_string = count == 1 ? u.display_name : "#{u.display_name} x#{count}"
       user_strings.push(user_string)
     end
   end
