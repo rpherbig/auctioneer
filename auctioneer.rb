@@ -1,4 +1,5 @@
 require 'discordrb'
+require 'logger'
 
 ONE = "\u0031\uFE0F\u20E3"
 TWO = "\u0032\uFE0F\u20E3"
@@ -23,17 +24,28 @@ ADMINS = [85187136659128320, 256665150180818946, 673546923051057183]
   '100 evolution chest' => 16,
 }
 
+@log = Logger.new('log.txt')
 @message_ids = {}
 
 @bot = Discordrb::Commands::CommandBot.new token: IO.readlines("token.txt", chomp: true).first, prefix: '!'
+@log.debug("Bot started up")
+
+def log_request(name, user)
+  @log.debug("Received '#{name}' request: #{user.display_name}, #{user.id}")
+end
+
+def log_reaction(type, message)
+  @log.debug("Type: '#{type}', Message ID: '#{message.id}', Reactions: #{message.all_reaction_users()}")
+end
 
 def format_auction_item(item_name, remaining_quantity, max_quantity, user_bids)
   bid_string = user_bids.length > 0 ? user_bids.join(", ") : "No bidders"
   "#{item_name} (#{remaining_quantity}/#{max_quantity} left): #{bid_string}"
 end
 
-def recalculate_reactions(message)
+def recalculate_reactions(type, message)
   return unless @message_ids.keys.include?(message.id)
+  log_reaction(type, message)
 
   reactions = message.all_reaction_users()
   new_quantity = 0
@@ -63,12 +75,12 @@ end
 
 #in: "#war-auction"
 @bot.reaction_add do |reaction_event|
-  recalculate_reactions(reaction_event.message)
+  recalculate_reactions('add', reaction_event.message)
 end
 
 #in: "#war-auction"
 @bot.reaction_remove do |reaction_event|
-  recalculate_reactions(reaction_event.message)
+  recalculate_reactions('remove', reaction_event.message)
 end
 
 def add_reactions(message)
@@ -77,7 +89,7 @@ end
 
 @bot.command(:start, help_available: false) do |event|
   break unless ADMINS.include?(event.user.id)
-  puts 'Received start command'
+  log_request('start', event.user)
 
   time = Time.new
   date_string = time.strftime("%m/%d/%Y")
@@ -99,7 +111,7 @@ end
 
 @bot.command(:stop, help_available: false) do |event|
   break unless ADMINS.include?(event.user.id)
-  puts 'Received stop command'
+  log_request('stop', event.user)
 
   @bot.send_message(event.channel.id, 'Stopping the auction!')
 
@@ -110,7 +122,7 @@ end
 
 @bot.command(:exit, help_available: false) do |event|
   break unless ADMINS.include?(event.user.id)
-  puts 'Received exit command'
+  log_request('exit', event.user)
 
   @bot.send_message(event.channel.id, 'Auctioneer is shutting down')
   
