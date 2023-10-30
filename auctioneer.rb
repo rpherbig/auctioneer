@@ -74,10 +74,12 @@ class Auctioneer
     reactions = message.all_reaction_users
     new_quantity = 0
     user_strings = []
+    users_seen = []
 
     REACTIONS.each do |r|
       users = reactions[r].reject { |u| u.id == BOT_ID }
       users.each do |u|
+        users_seen.push(u)
         count = REACTION_TO_COUNT[r]
         new_quantity += count
         user_string = count == 1 ? u.display_name : "#{u.display_name} x#{count}"
@@ -91,7 +93,13 @@ class Auctioneer
     new_message = format_auction_item(item_name, remaining, max_quantity, user_strings)
 
     if remaining.negative?
-      send(message, ":x: Item \"#{item_name}\" has too many bids. I need a human to fix it! :x:")
+      send(message, ":x: Item \"#{item_name}\" has too many bids. :x:")
+    end
+
+    duplicate_users = users_seen.select { |u| users_seen.count(u) > 1 }
+    unless duplicate_users.empty?
+      duplicate_users_string = duplicate_users.uniq.map { |u| u.mention }.join(' ')
+      send(message, ":x: Attention #{duplicate_users_string}: you have multiple bids on item \"#{item_name}\". Please only select one reaction per item. :x:")
     end
 
     message.edit(new_message)
