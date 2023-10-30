@@ -91,6 +91,11 @@ end
   break unless ADMINS.include?(event.user.id)
   log_request('start', event.user)
 
+  if @message_ids.length > 0
+    @bot.send_message(event.channel.id, "Detecting a previously running auction. Stopping it now.")
+    @message_ids.clear
+  end
+
   time = Time.new
   date_string = time.strftime("%m/%d/%Y")
   @bot.send_message(event.channel.id, ":tada: Starting a new auction for #{date_string}, please wait a moment! :tada:")
