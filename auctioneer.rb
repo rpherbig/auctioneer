@@ -28,17 +28,18 @@ AUCTION_ITEMS = {
 class Auctioneer
   def initialize
     Discordrb::LOGGER.streams << File.open('log.txt', 'a')
-    @tracked_messages = {}
-    @bot = Discordrb::Commands::CommandBot.new token: IO.readlines('token.txt', chomp: true).first, prefix: '!'
-    log('Bot started up')
+    @message_to_item = {}
+    @message_to_reactions = {}
 
+    @bot = Discordrb::Commands::CommandBot.new token: IO.readlines('token.txt', chomp: true).first, prefix: '!'
     @bot.command(:start, help_available: false) { |event| start(event) }
     @bot.command(:stop, help_available: false) { |event| stop(event) }
     @bot.command(:exit, help_available: false) { |event| do_exit(event) }
     @bot.reaction_add { |reaction_event| recalculate_reactions('add', reaction_event.message) }
     @bot.reaction_remove { |reaction_event| recalculate_reactions('remove', reaction_event.message) }
-
     at_exit { @bot.stop }
+
+    log('Bot started up')
   end
 
   def run
@@ -67,11 +68,13 @@ class Auctioneer
   end
 
   def recalculate_reactions(type, message)
-    return unless @tracked_messages.keys.include?(message)
+    return unless @message_to_item.keys.include?(message)
+    # reactions?
 
     log_reaction(type, message)
 
     reactions = message.all_reaction_users
+    @message_to_reactions[message] = reactions
     new_quantity = 0
     user_strings = []
     users_seen = []
@@ -87,7 +90,7 @@ class Auctioneer
       end
     end
 
-    item_name = @tracked_messages[message]
+    item_name = @message_to_item[message]
     max_quantity = AUCTION_ITEMS[item_name]
     remaining = max_quantity - new_quantity
     new_message = format_auction_item(item_name, remaining, max_quantity, user_strings)
@@ -102,6 +105,20 @@ class Auctioneer
       send(message, ":x: Attention #{duplicate_users_string}: you have multiple bids on item \"#{item_name}\". Please only select one reaction per item. :x:")
     end
 
+    overbid_users = @message_to_reactions
+      .map { |m, all_reactions| REACTIONS.map { |r| all_reactions[r] } }
+      .flatten
+      .compact
+      .reject { |user| user.id == BOT_ID }
+      .map { |user| user.mention }
+      .tally
+      .select { |user, count| count > 3 }
+      .map { |user, c| user }
+    if overbid_users.any?
+      overbid_users_string = overbid_users.join(' ')
+      send(message, ":x: Attention #{overbid_users_string}: you have more than 3 bids across all items. Please only bid on up to 3 items. :x:")
+    end
+
     message.edit(new_message)
   end
 
@@ -114,9 +131,10 @@ class Auctioneer
 
     log_request('start', event.user)
 
-    if @tracked_messages.any?
+    if @message_to_item.any? # reactions?
       send(event, 'Detecting a previously running auction. Stopping it now.')
-      @tracked_messages.clear
+      @message_to_item.clear
+      @message_to_reactions.clear
     end
 
     time = Time.new
@@ -127,7 +145,8 @@ class Auctioneer
       message = format_auction_item(name, quantity, quantity, [])
       e = send(event, message)
       add_reactions(e.message)
-      @tracked_messages[e.message] = name
+      @message_to_item[e.message] = name
+      @message_to_reactions[e.message] = {}
     end
 
     send(event,
@@ -145,7 +164,8 @@ Note: I am rate limited, so changes may take a minute to show up.
 
     send(event, 'Stopping the auction!')
 
-    @tracked_messages.clear
+    @message_to_item.clear
+    @message_to_reactions.clear
 
     nil
   end
