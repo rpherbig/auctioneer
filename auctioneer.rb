@@ -13,7 +13,7 @@ REACTION_TO_COUNT = {
 BOT_ID = 1167205208909160488
 # S, L, K
 ADMINS = [85187136659128320, 256665150180818946, 673546923051057183]
-@AUCTION_ITEMS = {
+AUCTION_ITEMS = {
   '600 species chest' => 8,
   '300 species chest' => 16,
   '100 species chest' => 80,
@@ -62,7 +62,7 @@ def recalculate_reactions(type, message)
   end
 
   item_name = @message_ids[message.id]
-  max_quantity = @AUCTION_ITEMS[item_name]
+  max_quantity = AUCTION_ITEMS[item_name]
   remaining = max_quantity - new_quantity
   new_message = format_auction_item(item_name, remaining, max_quantity, user_strings)
 
@@ -100,7 +100,7 @@ end
   date_string = time.strftime("%m/%d/%Y")
   @bot.send_message(event.channel.id, ":tada: Starting a new auction for #{date_string}, please wait a moment! :tada:")
 
-  @AUCTION_ITEMS.each do |name, quantity|
+  AUCTION_ITEMS.each do |name, quantity|
     message = format_auction_item(name, quantity, quantity, [])
     e = @bot.send_message(event.channel.id, message)
     add_reactions(e.message)
