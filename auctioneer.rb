@@ -32,10 +32,10 @@ def format_auction_item(item_name, remaining_quantity, max_quantity, user_bids)
   "#{item_name} (#{remaining_quantity}/#{max_quantity} left): #{bid_string}"
 end
 
-def recalculate_reactions(reaction_event)
-  return unless @message_ids.keys.include?(reaction_event.message.id)
+def recalculate_reactions(message)
+  return unless @message_ids.keys.include?(message.id)
 
-  reactions = reaction_event.message.all_reaction_users()
+  reactions = message.all_reaction_users()
   new_quantity = 0
   user_strings = []
 
@@ -49,26 +49,26 @@ def recalculate_reactions(reaction_event)
     end
   end
 
-  item_name = @message_ids[reaction_event.message.id]
+  item_name = @message_ids[message.id]
   max_quantity = @AUCTION_ITEMS[item_name]
   remaining = max_quantity - new_quantity
   new_message = format_auction_item(item_name, remaining, max_quantity, user_strings)
 
   if remaining < 0
-    @bot.send_message(reaction_event.message.channel.id, ":x: Item \"#{item_name}\" has too many bids. I need a human to fix it! :x:")
+    @bot.send_message(message.channel.id, ":x: Item \"#{item_name}\" has too many bids. I need a human to fix it! :x:")
   end
 
-  reaction_event.message.edit(new_message)
+  message.edit(new_message)
 end
 
 #in: "#war-auction"
 @bot.reaction_add do |reaction_event|
-  recalculate_reactions(reaction_event)
+  recalculate_reactions(reaction_event.message)
 end
 
 #in: "#war-auction"
 @bot.reaction_remove do |reaction_event|
-  recalculate_reactions(reaction_event)
+  recalculate_reactions(reaction_event.message)
 end
 
 def add_reactions(message)
