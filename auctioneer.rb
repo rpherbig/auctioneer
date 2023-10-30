@@ -58,7 +58,7 @@ class Auctioneer
   end
 
   def format_auction_item(item_name, remaining_quantity, max_quantity, user_bids)
-    bid_string = user_bids.length.positive? ? user_bids.join(', ') : 'No bidders'
+    bid_string = user_bids.any? ? user_bids.join(', ') : 'No bidders'
     "#{item_name} (#{remaining_quantity}/#{max_quantity} left): #{bid_string}"
   end
 
@@ -97,7 +97,7 @@ class Auctioneer
     end
 
     duplicate_users = users_seen.select { |u| users_seen.count(u) > 1 }
-    unless duplicate_users.empty?
+    if duplicate_users.any?
       duplicate_users_string = duplicate_users.uniq.map { |u| u.mention }.join(' ')
       send(message, ":x: Attention #{duplicate_users_string}: you have multiple bids on item \"#{item_name}\". Please only select one reaction per item. :x:")
     end
@@ -114,7 +114,7 @@ class Auctioneer
 
     log_request('start', event.user)
 
-    if @message_ids.length.positive?
+    if @message_ids.any?
       send(event, 'Detecting a previously running auction. Stopping it now.')
       @message_ids.clear
     end
