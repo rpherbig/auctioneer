@@ -38,6 +38,9 @@ class Auctioneer
     @bot.reaction_remove { |reaction_event| recalculate_reactions('remove', reaction_event.message) }
 
     at_exit { @bot.stop }
+  end
+
+  def run
     @bot.run
   end
 
@@ -136,4 +139,5 @@ class Auctioneer
   end
 end
 
-Auctioneer.new
+a = Auctioneer.new
+a.run
