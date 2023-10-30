@@ -62,6 +62,10 @@ class Auctioneer
     "#{item_name} (#{remaining_quantity}/#{max_quantity} left): #{bid_string}"
   end
 
+  def send(event, text)
+    @bot.send_message(event.channel.id, text)
+  end
+
   def recalculate_reactions(type, message)
     return unless @message_ids.keys.include?(message.id)
 
@@ -87,8 +91,7 @@ class Auctioneer
     new_message = format_auction_item(item_name, remaining, max_quantity, user_strings)
 
     if remaining.negative?
-      @bot.send_message(message.channel.id,
-                        ":x: Item \"#{item_name}\" has too many bids. I need a human to fix it! :x:")
+      send(message, ":x: Item \"#{item_name}\" has too many bids. I need a human to fix it! :x:")
     end
 
     message.edit(new_message)
@@ -104,25 +107,25 @@ class Auctioneer
     log_request('start', event.user)
 
     if @message_ids.length.positive?
-      @bot.send_message(event.channel.id, 'Detecting a previously running auction. Stopping it now.')
+      send(event, 'Detecting a previously running auction. Stopping it now.')
       @message_ids.clear
     end
 
     time = Time.new
     date_string = time.strftime('%m/%d/%Y')
-    @bot.send_message(event.channel.id,
-                      ":tada: Starting a new auction for #{date_string}, please wait a moment! :tada:")
+    send(event, ":tada: Starting a new auction for #{date_string}, please wait a moment! :tada:")
 
     AUCTION_ITEMS.each do |name, quantity|
       message = format_auction_item(name, quantity, quantity, [])
-      e = @bot.send_message(event.channel.id, message)
+      e = send(event, message)
       add_reactions(e.message)
       @message_ids[e.message.id] = name
     end
 
-    event << 'To claim something, react to its message with the quantity you want. For example, :two: means two of that item.'
-    event << 'Note: I am rate limited, so changes may take a minute to show up.'
-    event << ':tada: The auction is ready! :tada:'
+    send(event,
+'To claim something, react to its message with the quantity you want. For example, :two: means two of that item.
+Note: I am rate limited, so changes may take a minute to show up.
+:tada: The auction is ready! :tada:')
 
     nil
   end
@@ -132,7 +135,7 @@ class Auctioneer
 
     log_request('stop', event.user)
 
-    @bot.send_message(event.channel.id, 'Stopping the auction!')
+    send(event, 'Stopping the auction!')
 
     @message_ids.clear
 
@@ -144,7 +147,7 @@ class Auctioneer
 
     log_request('exit', event.user)
 
-    @bot.send_message(event.channel.id, 'Auctioneer is shutting down')
+    send(event, 'Auctioneer is shutting down')
 
     exit
   end
