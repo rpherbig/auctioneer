@@ -28,7 +28,7 @@ AUCTION_ITEMS = {
 class Auctioneer
   def initialize
     Discordrb::LOGGER.streams << File.open('log.txt', 'a')
-    @message_ids = {}
+    @tracked_messages = {}
     @bot = Discordrb::Commands::CommandBot.new token: IO.readlines('token.txt', chomp: true).first, prefix: '!'
     log('Bot started up')
 
@@ -67,7 +67,7 @@ class Auctioneer
   end
 
   def recalculate_reactions(type, message)
-    return unless @message_ids.keys.include?(message.id)
+    return unless @tracked_messages.keys.include?(message)
 
     log_reaction(type, message)
 
@@ -87,7 +87,7 @@ class Auctioneer
       end
     end
 
-    item_name = @message_ids[message.id]
+    item_name = @tracked_messages[message]
     max_quantity = AUCTION_ITEMS[item_name]
     remaining = max_quantity - new_quantity
     new_message = format_auction_item(item_name, remaining, max_quantity, user_strings)
@@ -114,9 +114,9 @@ class Auctioneer
 
     log_request('start', event.user)
 
-    if @message_ids.any?
+    if @tracked_messages.any?
       send(event, 'Detecting a previously running auction. Stopping it now.')
-      @message_ids.clear
+      @tracked_messages.clear
     end
 
     time = Time.new
@@ -127,7 +127,7 @@ class Auctioneer
       message = format_auction_item(name, quantity, quantity, [])
       e = send(event, message)
       add_reactions(e.message)
-      @message_ids[e.message.id] = name
+      @tracked_messages[e.message] = name
     end
 
     send(event,
@@ -145,7 +145,7 @@ Note: I am rate limited, so changes may take a minute to show up.
 
     send(event, 'Stopping the auction!')
 
-    @message_ids.clear
+    @tracked_messages.clear
 
     nil
   end
