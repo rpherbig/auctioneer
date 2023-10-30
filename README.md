@@ -11,3 +11,9 @@ While an auction is running, watches for added/removed reactions to its own mess
 * **!start**: starts a new auction
 * **!stop**: stops the current auction, if any
 * **!exit**: shut down the bot
+
+# Invite URL
+
+This bot's invite URL is: https://discord.com/oauth2/authorize?&client_id=1167205208909160488&scope=bot
+
+Follow that link to invite it to your server

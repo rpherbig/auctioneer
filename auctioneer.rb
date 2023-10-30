@@ -27,9 +27,6 @@ ADMINS = [85187136659128320, 256665150180818946, 673546923051057183]
 
 @bot = Discordrb::Commands::CommandBot.new token: IO.readlines("token.txt", chomp: true).first, prefix: '!'
 
-puts "This bot's invite URL is #{@bot.invite_url}."
-puts 'Click on it to invite it to your server.'
-
 def format_auction_item(item_name, remaining_quantity, max_quantity, user_bids)
   bid_string = user_bids.length > 0 ? user_bids.join(", ") : "No bidders"
   "#{item_name} (#{remaining_quantity}/#{max_quantity} left): #{bid_string}"
