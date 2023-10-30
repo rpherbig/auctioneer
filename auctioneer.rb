@@ -93,9 +93,9 @@ end
     @message_ids[e.message.id] = name
   end
 
-  @bot.send_message(event.channel.id, 'To claim something, react to its message with the quantity you want. For example, :two: means two of that item.')
-  @bot.send_message(event.channel.id, 'Note: I am rate limited, so changes may take a minute to show up.')
-  @bot.send_message(event.channel.id, ':tada: The auction is ready! :tada:')
+  event << 'To claim something, react to its message with the quantity you want. For example, :two: means two of that item.'
+  event << 'Note: I am rate limited, so changes may take a minute to show up.'
+  event << ':tada: The auction is ready! :tada:'
 
   nil
 end
