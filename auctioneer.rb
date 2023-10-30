@@ -103,7 +103,7 @@ end
 
   @bot.send_message(event.channel.id, 'Stopping the auction!')
 
-  message_ids.clear
+  @message_ids.clear
 
   nil
 end
