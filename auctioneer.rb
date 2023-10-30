@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'discordrb'
-require 'logger'
 
 ONE = "\u0031\uFE0F\u20E3"
 TWO = "\u0032\uFE0F\u20E3"
@@ -28,10 +27,10 @@ AUCTION_ITEMS = {
 
 class Auctioneer
   def initialize
+    Discordrb::LOGGER.streams << File.open('log.txt', 'w')
     @message_ids = {}
-    @log = Logger.new('log.txt')
     @bot = Discordrb::Commands::CommandBot.new token: IO.readlines('token.txt', chomp: true).first, prefix: '!'
-    @log.debug('Bot started up')
+    log('Bot started up')
 
     @bot.command(:start, help_available: false) { |event| start(event) }
     @bot.command(:stop, help_available: false) { |event| stop(event) }
@@ -46,12 +45,16 @@ class Auctioneer
     @bot.run
   end
 
+  def log(s)
+    Discordrb::LOGGER.info(s)
+  end
+
   def log_request(name, user)
-    @log.debug("Received '#{name}' request: #{user.display_name}, #{user.id}")
+    log("Received '#{name}' request: #{user.display_name}, #{user.id}")
   end
 
   def log_reaction(type, message)
-    @log.debug("Type: '#{type}', Message ID: '#{message.id}', Reactions: #{message.all_reaction_users}")
+    log("Type: '#{type}', Message ID: '#{message.id}', Reactions: #{message.all_reaction_users}")
   end
 
   def format_auction_item(item_name, remaining_quantity, max_quantity, user_bids)
