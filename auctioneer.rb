@@ -27,7 +27,7 @@ AUCTION_ITEMS = {
 
 class Auctioneer
   def initialize
-    Discordrb::LOGGER.streams << File.open('log.txt', 'w')
+    Discordrb::LOGGER.streams << File.open('log.txt', 'a')
     @message_ids = {}
     @bot = Discordrb::Commands::CommandBot.new token: IO.readlines('token.txt', chomp: true).first, prefix: '!'
     log('Bot started up')
