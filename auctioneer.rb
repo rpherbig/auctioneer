@@ -31,7 +31,7 @@ class Auctioneer
     @message_to_item = {}
     @message_to_reactions = {}
 
-    @bot = Discordrb::Commands::CommandBot.new token: IO.readlines('token.txt', chomp: true).first, prefix: '!'
+    @bot = Discordrb::Commands::CommandBot.new token: File.readlines('token.txt', chomp: true).first, prefix: '!'
     @bot.command(:start, help_available: false) { |event| start(event) }
     @bot.command(:stop, help_available: false) { |event| stop(event) }
     @bot.command(:exit, help_available: false) { |event| do_exit(event) }
@@ -46,8 +46,8 @@ class Auctioneer
     @bot.run
   end
 
-  def log(s)
-    Discordrb::LOGGER.info(s)
+  def log(text)
+    Discordrb::LOGGER.info(text)
   end
 
   def log_request(name, user)
@@ -69,6 +69,7 @@ class Auctioneer
 
   def recalculate_reactions(type, message)
     return unless @message_to_item.keys.include?(message)
+
     # reactions?
 
     log_reaction(type, message)
@@ -81,8 +82,8 @@ class Auctioneer
 
     REACTIONS.each do |r|
       users = reactions[r].reject { |u| u.id == BOT_ID }
+      users_seen.concat(users)
       users.each do |u|
-        users_seen.push(u)
         count = REACTION_TO_COUNT[r]
         new_quantity += count
         user_string = count == 1 ? u.display_name : "#{u.display_name} x#{count}"
@@ -95,28 +96,31 @@ class Auctioneer
     remaining = max_quantity - new_quantity
     new_message = format_auction_item(item_name, remaining, max_quantity, user_strings)
 
-    if remaining.negative?
-      send(message, ":x: Item \"#{item_name}\" has too many bids. :x:")
-    end
+    send(message, ":x: Item \"#{item_name}\" has too many bids. :x:") if remaining.negative?
 
-    duplicate_users = users_seen.select { |u| users_seen.count(u) > 1 }
-    if duplicate_users.any?
-      duplicate_users_string = duplicate_users.uniq.map { |u| u.mention }.join(' ')
-      send(message, ":x: Attention #{duplicate_users_string}: you have multiple bids on item \"#{item_name}\". Please only select one reaction per item. :x:")
+    duplicate_users = users_seen
+                      .select { |u| users_seen.count(u) > 1 }
+                      .uniq
+                      .map(&:mention)
+                      .join(' ')
+    unless duplicate_users.empty?
+      send(message,
+           ":x: Attention #{duplicate_users}: you have multiple bids on item \"#{item_name}\". Please only select one reaction per item. :x:")
     end
 
     overbid_users = @message_to_reactions
-      .map { |m, all_reactions| REACTIONS.map { |r| all_reactions[r] } }
-      .flatten
-      .compact
-      .reject { |user| user.id == BOT_ID }
-      .map { |user| user.mention }
-      .tally
-      .select { |user, count| count > 3 }
-      .map { |user, c| user }
-    if overbid_users.any?
-      overbid_users_string = overbid_users.join(' ')
-      send(message, ":x: Attention #{overbid_users_string}: you have more than 3 bids across all items. Please only bid on up to 3 items. :x:")
+                    .map { |_m, all_reactions| REACTIONS.map { |r| all_reactions[r] } }
+                    .flatten
+                    .compact
+                    .reject { |user| user.id == BOT_ID }
+                    .map(&:mention)
+                    .tally
+                    .select { |_user, count| count > 3 }
+                    .map { |user, _c| user }
+                    .join(' ')
+    unless overbid_users.empty?
+      send(message,
+           ":x: Attention #{overbid_users}: you have more than 3 bids across all items. Please only bid on up to 3 items. :x:")
     end
 
     message.edit(new_message)
@@ -150,7 +154,7 @@ class Auctioneer
     end
 
     send(event,
-'To claim something, react to its message with the quantity you want. For example, :two: means two of that item.
+         'To claim something, react to its message with the quantity you want. For example, :two: means two of that item.
 Note: I am rate limited, so changes may take a minute to show up.
 :tada: The auction is ready! :tada:')
 
