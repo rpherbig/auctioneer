@@ -108,16 +108,15 @@ class Auctioneer
            ":x: Attention #{duplicate_users}: you have multiple bids on item \"#{item_name}\". Please only select one reaction per item. :x:")
     end
 
-    overbid_users = @message_to_reactions
-                    .map { |_m, all_reactions| REACTIONS.map { |r| all_reactions[r] } }
-                    .flatten
-                    .compact
-                    .reject { |user| user.id == BOT_ID }
-                    .map(&:mention)
-                    .tally
-                    .select { |_user, count| count > 3 }
-                    .map { |user, _c| user }
-                    .join(' ')
+    overbid_users = @message_to_reactions # {message -> {reaction->[user]}}
+                    .values # [{reaction->[user]}]
+                    .map { |hash| hash.transform_keys { |key| REACTION_TO_COUNT[key] } } # [{count->[user]}]
+                    .each_with_object(Hash.new(0)) { |hash, accum| hash.each { |count, user_array| user_array.each { |user| accum[user] += count } } } # {user->count}
+                    .delete_if { |user, _count| user.id == BOT_ID } # {user->count}
+                    .delete_if { |_user, count| count <= 3 } # {user->count}
+                    .keys # [user]
+                    .map(&:mention) # [user]
+                    .join(' ') # string
     unless overbid_users.empty?
       send(message,
            ":x: Attention #{overbid_users}: you have more than 3 bids across all items. Please only bid on up to 3 items. :x:")
