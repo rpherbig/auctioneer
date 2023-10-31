@@ -109,8 +109,7 @@ class Auctioneer
     end
 
     overbid_users = @message_to_reactions
-                    .map { |_m, all_reactions| REACTIONS.map { |r| all_reactions[r] } }
-                    .flatten
+                    .flat_map { |_m, all_reactions| REACTIONS.map { |r| all_reactions[r] } }
                     .compact
                     .reject { |user| user.id == BOT_ID }
                     .map(&:mention)
