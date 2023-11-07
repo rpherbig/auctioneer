@@ -17,3 +17,7 @@ While an auction is running, watches for added/removed reactions to its own mess
 This bot's invite URL is: https://discord.com/oauth2/authorize?&client_id=1167205208909160488&scope=bot
 
 Follow that link to invite it to your server
+
+# Example use
+
+![Example auction](/example.png?raw=true)
