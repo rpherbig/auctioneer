@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require './cached-message.rb'
+require './cached_message'
 
 ONE = "\u0031\uFE0F\u20E3"
 TWO = "\u0032\uFE0F\u20E3"
@@ -24,14 +24,14 @@ AUCTION_ITEMS = {
 }.freeze
 
 class Auction
-  def initialize(bot, channelId)
+  def initialize(bot, channel_id)
     @message_to_cache = {}
     @bot = bot
-    @channelId = channelId
+    @channel_id = channel_id
   end
 
   def send(text)
-    @bot.send_message(@channelId, text)
+    @bot.send_message(@channel_id, text)
   end
 
   def format_auction_item(item_name, remaining_quantity, max_quantity, user_bids)
@@ -94,13 +94,11 @@ Note: I am rate limited, so changes may take a minute to show up.
                       .uniq
                       .map(&:mention)
                       .join(' ')
-    unless duplicate_users.empty?
-      send(":x: Attention #{duplicate_users}: you have multiple bids on item \"#{item_name}\". Please only select one reaction per item. :x:")
-    end
+    send(":x: Attention #{duplicate_users}: you have multiple bids on item \"#{item_name}\". Please only select one reaction per item. :x:") unless duplicate_users.empty?
 
     overbid_users = @message_to_cache # {message -> cachedMessage}
                     .values # [cachedMessage]
-                    .map { |cache| cache.reactions } # [{reaction->[user]}]
+                    .map(&:reactions) # [{reaction->[user]}]
                     .map { |hash| hash.transform_keys { |key| REACTION_TO_COUNT[key] } } # [{count->[user]}]
                     .each_with_object(Hash.new(0)) { |hash, accum| hash.each { |count, user_array| user_array.each { |user| accum[user] += count } } } # {user->count}
                     .delete_if { |user, _count| user.id == BOT_ID } # {user->count}
@@ -108,9 +106,7 @@ Note: I am rate limited, so changes may take a minute to show up.
                     .keys # [user]
                     .map(&:mention) # [user]
                     .join(' ') # string
-    unless overbid_users.empty?
-      send(":x: Attention #{overbid_users}: you have more than 3 bids across all items. Please only bid on up to 3 items. :x:")
-    end
+    send(":x: Attention #{overbid_users}: you have more than 3 bids across all items. Please only bid on up to 3 items. :x:") unless overbid_users.empty?
 
     message.edit(new_message)
   end

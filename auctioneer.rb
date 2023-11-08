@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'discordrb'
-require './auction.rb'
+require './auction'
 
 # S, L, K
 ADMINS = [85187136659128320, 256665150180818946, 673546923051057183].freeze
