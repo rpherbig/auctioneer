@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require './cached-message.rb'
+
 ONE = "\u0031\uFE0F\u20E3"
 TWO = "\u0032\uFE0F\u20E3"
 THREE = "\u0033\uFE0F\u20E3"
@@ -23,8 +25,7 @@ AUCTION_ITEMS = {
 
 class Auction
   def initialize(bot, channelId)
-    @message_to_item = {}
-    @message_to_reactions = {}
+    @message_to_cache = {}
     @bot = bot
     @channelId = channelId
   end
@@ -51,8 +52,7 @@ class Auction
       message = format_auction_item(name, quantity, quantity, [])
       e = send(message)
       add_reactions(e.message)
-      @message_to_item[e.message] = name
-      @message_to_reactions[e.message] = {}
+      @message_to_cache[e.message] = CachedMessage.new(name)
     end
 
     send('To claim something, react to its message with the quantity you want. For example, :two: means two of that item.
@@ -61,12 +61,12 @@ Note: I am rate limited, so changes may take a minute to show up.
   end
 
   def auction_message?(message)
-    @message_to_item.keys.include?(message)
+    @message_to_cache.keys.include?(message)
   end
 
   def recalculate_reactions(message)
     reactions = message.all_reaction_users
-    @message_to_reactions[message] = reactions
+    @message_to_cache[message].reactions = reactions
     new_quantity = 0
     user_strings = []
     users_seen = []
@@ -82,7 +82,7 @@ Note: I am rate limited, so changes may take a minute to show up.
       end
     end
 
-    item_name = @message_to_item[message]
+    item_name = @message_to_cache[message].item
     max_quantity = AUCTION_ITEMS[item_name]
     remaining = max_quantity - new_quantity
     new_message = format_auction_item(item_name, remaining, max_quantity, user_strings)
@@ -98,8 +98,9 @@ Note: I am rate limited, so changes may take a minute to show up.
       send(":x: Attention #{duplicate_users}: you have multiple bids on item \"#{item_name}\". Please only select one reaction per item. :x:")
     end
 
-    overbid_users = @message_to_reactions # {message -> {reaction->[user]}}
-                    .values # [{reaction->[user]}]
+    overbid_users = @message_to_cache # {message -> cachedMessage}
+                    .values # [cachedMessage]
+                    .map { |cache| cache.reactions } # [{reaction->[user]}]
                     .map { |hash| hash.transform_keys { |key| REACTION_TO_COUNT[key] } } # [{count->[user]}]
                     .each_with_object(Hash.new(0)) { |hash, accum| hash.each { |count, user_array| user_array.each { |user| accum[user] += count } } } # {user->count}
                     .delete_if { |user, _count| user.id == BOT_ID } # {user->count}
