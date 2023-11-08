@@ -18,7 +18,7 @@ class Auctioneer
     @bot.reaction_remove { |reaction_event| recalculate_reactions('remove', reaction_event.message) }
     at_exit { @bot.stop }
 
-    @auction = nil
+    @auctions = {}
 
     log('Bot started up')
   end
@@ -31,8 +31,12 @@ class Auctioneer
     Discordrb::LOGGER.info(text)
   end
 
-  def log_request(type, user)
-    log("Received '#{type}' request: #{user.display_name}, #{user.id}")
+  def log_from_channel(channel, text)
+    log("Channel: #{channel.id}, #{text}")
+  end
+
+  def log_request(event, type)
+    log_from_channel(event.channel, "Received '#{type}' request from '#{event.user.display_name}' (#{event.user.id})")
   end
 
   def send(event, text)
@@ -40,11 +44,13 @@ class Auctioneer
   end
 
   def recalculate_reactions(type, message)
-    return unless @auction && @auction.auction_message?(message)
+    auction = @auctions[message.channel.id]
+    return if auction.nil?
+    return unless auction.auction_message?(message)
 
-    log("Type: '#{type}', Message ID: '#{message.id}', Reactions: #{message.all_reaction_users}")
+    log_from_channel(message.channel, "Message: #{message.id}, Type: '#{type}', Reactions: #{message.all_reaction_users}")
 
-    @auction.recalculate_reactions(message)
+    auction.recalculate_reactions(message)
   end
 
   def add_reactions(message)
@@ -54,26 +60,27 @@ class Auctioneer
   def start(event)
     return unless ADMINS.include?(event.user.id)
 
-    log_request('start', event.user)
+    log_request(event, 'start')
 
-    @auction = Auction.new(@bot, event.channel.id)
-    @auction.start
+    auction = Auction.new(@bot, event.channel.id)
+    @auctions[event.channel.id] = auction
+    auction.start
   end
 
   def stop(event)
     return unless ADMINS.include?(event.user.id)
 
-    log_request('stop', event.user)
+    log_request(event, 'stop')
 
     send(event, 'Stopping the auction!')
 
-    @auction = nil
+    @auctions.delete(event.channel.id)
   end
 
   def do_exit(event)
     return unless ADMINS.include?(event.user.id)
 
-    log_request('exit', event.user)
+    log_request(event, 'exit')
 
     send(event, 'Auctioneer is shutting down')
 
