@@ -13,14 +13,14 @@ REACTION_TO_COUNT = {
 }.freeze
 BOT_ID = 1167205208909160488
 AUCTION_ITEMS = {
-  '600 species chest' => 8,
-  '300 species chest' => 16,
-  '100 species chest' => 80,
-  '30 alchemy case' => 16,
-  '20 coatings' => 16,
-  '60 research briefcase' => 16,
-  '100 organ chest' => 16,
-  '100 evolution chest' => 16,
+  '600 species chest (1800 w-tads)' => 8,
+  '300 species chest (900 w-tads)' => 16,
+  '100 species chest (300 w-tads)' => 80,
+  '30 alchemy case (300 w-tads)' => 16,
+  '20 coatings (200 w-tads)' => 16,
+  '60 research briefcase (600 w-tads)' => 16,
+  '100 organ chest (600 w-tads)' => 16,
+  '100 evolution chest (400 w-tads)' => 16,
 }.freeze
 
 class Auction

@@ -75,6 +75,8 @@ class Auctioneer
     send(event, 'Stopping the auction!')
 
     @auctions.delete(event.channel.id)
+
+    nil
   end
 
   def do_exit(event)
