@@ -58,7 +58,7 @@ class Auctioneer
   end
 
   def start(event)
-    return unless ADMINS.include?(event.user.id)
+    #return unless ADMINS.include?(event.user.id)
 
     log_request(event, 'start')
 
@@ -68,7 +68,7 @@ class Auctioneer
   end
 
   def stop(event)
-    return unless ADMINS.include?(event.user.id)
+    #return unless ADMINS.include?(event.user.id)
 
     log_request(event, 'stop')
 
@@ -80,7 +80,7 @@ class Auctioneer
   end
 
   def do_exit(event)
-    return unless ADMINS.include?(event.user.id)
+    #return unless ADMINS.include?(event.user.id)
 
     log_request(event, 'exit')
 
