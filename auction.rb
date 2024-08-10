@@ -19,6 +19,9 @@ AUCTION_ITEMS = {
   '30 alchemy case (300 w-tads)' => 16,
   '20 coatings (200 w-tads)' => 16,
   '60 research briefcase (600 w-tads)' => 16,
+  'Blue Species Sequence (500 w-tads)' => 16,
+  'Purple Species Sequence (2000 w-tads)' => 16,
+  'Orange Species Sequence (6000 w-tads)' => 52,
   '100 organ chest (600 w-tads)' => 16,
   '100 evolution chest (400 w-tads)' => 16,
 }.freeze
